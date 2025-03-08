@@ -1,7 +1,4 @@
 #include QMK_KEYBOARD_H
-#if __has_include("keymap.h")
-#    include "keymap.h"
-#endif
 
 enum custom_keycodes {
     SPEC = SAFE_RANGE,
@@ -79,7 +76,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [SPECIALS_LAYER] = LAYOUT(
-        RGB_TOG    , TO(LIN1)   , TO(MAC1)   , TO(WIN1)   , KC_NO      , KC_9       ,                          KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO               ,
+        RGB_TOG    , TO(LIN1)   , TO(MAC1)   , TO(WIN1)   , KC_NO      , QK_BOOT    ,                          QK_BOOT    , KC_NO      , KC_NO      , KC_NO      , KC_NO      , RGB_TOG             ,
         KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO      ,                          KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO               ,
         KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO      ,                          KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO               ,
         KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO     , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO               ,
@@ -96,7 +93,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_NO      , KC_F1      , KC_F2      , KC_F3      , KC_F4      , KC_F5      ,                          KC_F6      , KC_F7      , KC_F8      , KC_F9      , KC_F10     , KC_F11              ,
         KC_TAB     , S(KC_1)    , S(KC_2)    , S(KC_6)    , S(KC_4)    , S(KC_5)    ,                          KC_PPLS    , KC_QUOT    , KC_RBRC    , KC_LBRC    , S(KC_BSLS) , KC_F12              ,
         KC_DEL     , S(KC_GRV)  , S(KC_3)    , S(KC_7)    , S(KC_9)    , S(KC_0)    ,                          KC_PMNS    , KC_RGHT    , KC_UP      , KC_DOWN    , KC_LEFT    , KC_RSFT             ,
-        KC_LSFT    , S(KC_SLSH) , M_BACKTICK , S(KC_8)    , S(KC_MINS) , KC_F11     , KC_NO     , MO(SPEC)   , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO               ,
+        KC_LSFT    , S(KC_SLSH) , M_BACKTICK , S(KC_8)    , S(KC_MINS) , KC_F11     , MO(SPEC)  , MO(SPEC)   , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO               ,
                                                             KC_LGUI    , KC_LALT    , KC_SPC    , KC_ESC     , KC_RSFT    , KC_NO
     ),
     [OS_MACOS_LAYER_1] = LAYOUT(
@@ -110,7 +107,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         RGB_TOG    , KC_F1      , KC_F2      , KC_F3      , KC_F4      , KC_F5      ,                          KC_F6      , KC_F7      , KC_F8      , KC_F9      , KC_F10     , KC_F11              ,
         KC_TAB     , S(KC_1)    , S(KC_2)    , S(KC_6)    , S(KC_4)    , S(KC_5)    ,                          KC_PPLS    , KC_QUOT    , KC_RBRC    , KC_LBRC    , S(KC_BSLS) , KC_F12              ,
         KC_DEL     , S(KC_GRV)  , S(KC_3)    , S(KC_7)    , S(KC_9)    , S(KC_0)    ,                          KC_PMNS    , KC_RGHT    , KC_UP      , KC_DOWN    , KC_LEFT    , KC_RSFT             ,
-        KC_LSFT    , S(KC_SLSH) , M_BACKTICK , S(KC_8)    , S(KC_MINS) , KC_F11     , KC_NO     , MO(SPEC)   , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO               ,
+        KC_LSFT    , S(KC_SLSH) , M_BACKTICK , S(KC_8)    , S(KC_MINS) , KC_F11     , MO(SPEC)  , MO(SPEC)   , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO               ,
                                                             KC_LGUI    , KC_LALT    , KC_SPC    , KC_ESC     , KC_RSFT    , KC_NO
     ),
     [OS_LINUX_LAYER_1] = LAYOUT(
@@ -124,11 +121,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         RGB_TOG    , KC_F1      , KC_F2      , KC_F3      , KC_F4      , KC_F5      ,                          KC_F6      , KC_F7      , KC_F8      , KC_F9      , KC_F10     , KC_F11              ,
         KC_TAB     , S(KC_1)    , S(KC_2)    , S(KC_6)    , S(KC_4)    , S(KC_5)    ,                          KC_PPLS    , KC_QUOT    , KC_RBRC    , KC_LBRC    , S(KC_BSLS) , KC_F12              ,
         KC_DEL     , S(KC_GRV)  , S(KC_3)    , S(KC_7)    , S(KC_9)    , S(KC_0)    ,                          KC_PMNS    , KC_RGHT    , KC_UP      , KC_DOWN    , KC_LEFT    , KC_RSFT             ,
-        KC_LSFT    , S(KC_SLSH) , M_BACKTICK , S(KC_8)    , S(KC_MINS) , KC_F11     , KC_NO     , MO(SPEC)   , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO               ,
+        KC_LSFT    , S(KC_SLSH) , M_BACKTICK , S(KC_8)    , S(KC_MINS) , KC_F11     , MO(SPEC)  , MO(SPEC)   , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO      , KC_NO               ,
                                                             KC_LGUI    , KC_LALT    , KC_SPC    , KC_ESC     , KC_RSFT    , KC_NO
     ),
 };
-
-#ifdef OTHER_KEYMAP_C
-#    include OTHER_KEYMAP_C
-#endif // OTHER_KEYMAP_C
