@@ -13,11 +13,11 @@ brew install qmk/qmk/qmk
 qmk setup
 ```
 
-# Compile
+# Compile script
 
-Compile to UF2 format:
+Run the compile script: (This will present a few options on what to do with the compiled file)
 
 ```sh
-qmk compile -kb keebio/iris/rev8 -km stijnklomp -e CONVERT_TO_UF2=yes
-cp .build/keebio_iris_rev8_stijnklomp.uf2 ~/Desktop/ # Optional - copy to desktop
+sudo chmod +x build_iris.sh # Make the script executable
+./build_iris.sh
 ```

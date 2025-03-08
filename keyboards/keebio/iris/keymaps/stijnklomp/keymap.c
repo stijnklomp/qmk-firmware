@@ -21,6 +21,8 @@ enum os_layers {
     OS_LINUX_LAYER_2 = 6,
 };
 
+#define DEFAULT_LAYER 1
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case M_BACKTICK:
