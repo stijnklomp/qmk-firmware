@@ -27,6 +27,7 @@ case $choice in
   1)
     echo "Copying compiled file to compiledLayouts/ & Desktop..."
     echo "Running all commands..."
+    rm -rf .build/*
     qmk compile -kb keebio/iris/rev8 -km stijnklomp -e CONVERT_TO_UF2=yes
 
     moveToCompiledFilesDirectory
@@ -34,6 +35,7 @@ case $choice in
     ;;
   2)
     echo "Running compile command..."
+    rm -rf .build/*
     qmk compile -kb keebio/iris/rev8 -km stijnklomp -e CONVERT_TO_UF2=yes
     ;;
   3)
