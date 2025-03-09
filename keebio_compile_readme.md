@@ -13,6 +13,12 @@ brew install qmk/qmk/qmk
 qmk setup
 ```
 
+3. Set Unicode input
+
+```sh
+qmk config user.unicode_enabled=true
+```
+
 # Compile script
 
 Run the compile script: (This will present a few options on what to do with the compiled file)
