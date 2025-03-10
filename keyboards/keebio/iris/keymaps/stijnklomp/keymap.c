@@ -63,17 +63,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 left_alt_pressed = true;
                 register_code(KC_LALT);
             } else {
+                left_alt_pressed = false;
                 if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
                     unregister_code(KC_LGUI);
                     if (left_shift_pressed) {
                         unregister_code(KC_LSFT);
                     }
                 }
-                left_alt_pressed = false;
                 unregister_code(KC_LALT);
             }
             return false;
-
 
         case KC_THREE: // KC_TAB
             if (record->event.pressed) {
@@ -195,6 +194,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 }
             } else {
                 right_pressed = false;
+                unregister_code(KC_RIGHT);
             }
             return false;
 
