@@ -1,15 +1,14 @@
 #include QMK_KEYBOARD_H
-// #include "quantum.h"
 
 enum custom_keycodes {
     M_BTICK = SAFE_RANGE,
-    KC_ONE, // KC_LCTL
-    KC_TWO, // KC_LALT
-    KC_THREE, // KC_TAB
-    KC_FOUR, // KC_LSFT
-    KC_FIVE, // KC_LEFT
-    KC_SIX, // KC_RIGHT
-    KC_SEVEN, // KC_LGUI
+    KC_ONE, // Left Control (KC_LCTL)
+    KC_TWO, // Left Alt (KC_LALT)
+    KC_THREE, // Tab (KC_TAB)
+    KC_FOUR, // Left Shift (KC_LSFT)
+    KC_FIVE, // Left (KC_LEFT)
+    KC_SIX, // Right (KC_RIGHT)
+    KC_SEVEN, // Left GUI (KC_LGUI)
 };
 
 enum os_layers {
@@ -49,10 +48,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case KC_ONE: // KC_LCTL
-            if (record->event.pressed) { // KC_LCTL
+        case KC_ONE: // Left Control
+            if (record->event.pressed) {
                 left_control_pressed = true;
-                // tap_code(KC_LCTL);
                 register_code(KC_LCTL);
             } else {
                 left_control_pressed = false;
@@ -60,20 +58,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case KC_TWO: // KC_LALT
-            if (record->event.pressed) { // KC_LALT
+        case KC_TWO: // Left Alt
+            if (record->event.pressed) {
                 left_alt_pressed = true;
-                // tap_code(KC_LALT);
                 register_code(KC_LALT);
             } else {
                 if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
-                    // if (left_tab_pressed) {
-                        unregister_code(KC_LGUI);
-                        if (left_shift_pressed) {
-                            unregister_code(KC_LSFT);
-                        }
-                    // }
-                    // left_tab_pressed = false;
+                    unregister_code(KC_LGUI);
+                    if (left_shift_pressed) {
+                        unregister_code(KC_LSFT);
+                    }
                 }
                 left_alt_pressed = false;
                 unregister_code(KC_LALT);
@@ -96,16 +90,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     } else if (left_alt_pressed) {
                         unregister_code(KC_LALT);
                         if (left_shift_pressed) {
-                            // tap_code16(S(LGUI(KC_TAB)));
                             register_code(KC_LSFT);
                             register_code(KC_LGUI);
                             tap_code(KC_TAB);
-                            // unregister_code(KC_LGUI);
                         } else {
-                            // tap_code16(LGUI(KC_TAB));
                             register_code(KC_LGUI);
                             tap_code(KC_TAB);
-                            // unregister_code(KC_LGUI);
                         }
                         register_code(KC_LALT);
                     } else {
@@ -114,43 +104,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 } else {
                     tap_code(KC_TAB);
                 }
-                // if (left_control_pressed) {
-                //     // unregister_code(KC_LCTL);
-                //     // unregister_code(KC_LALT);
-                //     // unregister_code(KC_LSFT);
-                //     if (left_shift_pressed) { // KC_LALT + KC_LSFT + KC_TAB
-                //         tap_code16(S(LALT(KC_TAB)));
-                //     } else { // KC_LALT + KC_TAB
-                //         tap_code16(LALT(KC_TAB));
-                //     }
-                // } else if (left_alt_pressed) {
-                //     if (left_shift_pressed) { // KC_LCTL + KC_LSFT + KC_TAB
-                //         tap_code16(S(LCTL(KC_TAB)));
-                //     } else { // KC_LCTL + KC_TAB
-                //         tap_code16(LCTL(KC_TAB));
-                //     }
-                // } else { // KC_TAB
-                //     tap_code(KC_TAB);
-                // }
             } else {
-                // if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
-                //     if (left_alt_pressed) {
-                //         unregister_code(KC_LGUI);
-                //         if (left_shift_pressed) {
-                //             unregister_code(KC_LSFT);
-                //         }
-                //     }
-                //     left_tab_pressed = false;
-                // } else {
-                    left_tab_pressed = false;
-                // }
+                left_tab_pressed = false;
             }
             return false;
 
-        case KC_FOUR: // KC_LSFT
-            if (record->event.pressed) { // KC_LSFT
+        case KC_FOUR: // Left Shift
+            if (record->event.pressed) {
                 left_shift_pressed = true;
-                // tap_code(KC_LSFT);
                 register_code(KC_LSFT);
             } else {
                 left_shift_pressed = false;
@@ -158,18 +119,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case KC_FIVE: // KC_LEFT
+        case KC_FIVE: // Left
             if (record->event.pressed) {
                 left_pressed = true;
                 if (get_highest_layer(layer_state) == LWIN0 || get_highest_layer(layer_state) == LWIN1) {
-                    if (left_alt_pressed) { // KC_HOME
+                    if (left_alt_pressed) { // Home
                         unregister_code(KC_LALT);
                         tap_code(KC_HOME);
                         register_code(KC_LALT);
-                    // } else if (left_control_pressed) { // KC_LALT + KC_LEFT
-                    //     tap_code16(LALT(KC_LEFT));
-                    //     tap_code(KC_END);
-                    } else { // KC_LEFT
+                    } else {
                         register_code(KC_LEFT);
                     }
                 } else if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
@@ -189,10 +147,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                             tap_code16(LGUI(KC_LEFT));
                         }
                         register_code(KC_LALT);
-                    } else { // KC_LEFT
+                    } else {
                         register_code(KC_LEFT);
                     }
-                } else { // KC_LEFT
+                } else {
                     register_code(KC_LEFT);
                 }
             } else {
@@ -201,18 +159,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case KC_SIX: // KC_RIGHT
+        case KC_SIX: // Right
             if (record->event.pressed) {
                 right_pressed = true;
                 if (get_highest_layer(layer_state) == LWIN0 || get_highest_layer(layer_state) == LWIN1) {
-                    if (left_alt_pressed) { // KC_END
+                    if (left_alt_pressed) { // End
                         unregister_code(KC_LALT);
                         tap_code(KC_END);
                         register_code(KC_LALT);
-                    // } else if (left_control_pressed) { // KC_LALT + KC_RIGHT
-                    //     tap_code16(LALT(KC_RIGHT));
-                    //     tap_code(KC_END);
-                    } else { // KC_RIGHT
+                    } else {
                         register_code(KC_RIGHT);
                     }
                 } else if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
@@ -232,19 +187,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                             tap_code16(LGUI(KC_RIGHT));
                         }
                         register_code(KC_LALT);
-                    } else { // KC_RIGHT
+                    } else {
                         register_code(KC_RIGHT);
                     }
-                } else { // KC_RIGHT
+                } else {
                     unregister_code(KC_RIGHT);
                 }
-
             } else {
                 right_pressed = false;
             }
             return false;
 
-        case KC_SEVEN: // KC_LGUI
+        case KC_SEVEN: // Left GUI
             if (record->event.pressed) {
                 left_gui_pressed = true;
                 register_code(KC_LGUI);
@@ -256,7 +210,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
     return true;
 }
-// Win: `KC_LALT + KC_LEFT` should jump to beginning of the sentence
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [LSPEC0] = LAYOUT(
         RGB_TOG    , TO(LLIN0)  , TO(LMAC0)  , TO(LWIN0) , KC_NO     , QK_BOOT   ,                         QK_BOOT   , KC_NO     , TO(LWIN0) , TO(LMAC0) , TO(LLIN0) , RGB_TOG   ,
