@@ -124,6 +124,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 if (get_highest_layer(layer_state) == LWIN0 || get_highest_layer(layer_state) == LWIN1) {
                     if (left_alt_pressed) { // Home
                         unregister_code(KC_LALT);
+                        tap_code(KC_LALT);
                         tap_code(KC_HOME);
                         register_code(KC_LALT);
                     } else {
@@ -164,6 +165,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 if (get_highest_layer(layer_state) == LWIN0 || get_highest_layer(layer_state) == LWIN1) {
                     if (left_alt_pressed) { // End
                         unregister_code(KC_LALT);
+                        tap_code(KC_LALT);
                         tap_code(KC_END);
                         register_code(KC_LALT);
                     } else {
