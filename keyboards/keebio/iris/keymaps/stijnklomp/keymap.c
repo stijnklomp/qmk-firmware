@@ -1,8 +1,8 @@
 #include QMK_KEYBOARD_H
 
 enum custom_keycodes {
-    SECOND_LYR = SAFE_RANGE, // MO(LWIN1/LMAC1/LLIN1)
-    M_BTICK, // `
+    // SECOND_LYR = , // MO(LWIN1/LMAC1/LLIN1)
+    M_BTICK = SAFE_RANGE, // `
     KC_ONE, // Left Control (KC_LCTL)
     KC_TWO, // Left Alt (KC_LALT)
     KC_THREE, // Tab (KC_TAB)
@@ -11,6 +11,7 @@ enum custom_keycodes {
     KC_SIX, // Right (KC_RIGHT)
     KC_SEVEN, // Left GUI (KC_LGUI)
     KC_EIGHT, // q (KC_Q)
+    KC_NINE, // Backspace (KC_BSPC)
 };
 
 enum os_layers {
@@ -44,31 +45,32 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     (void)left_gui_pressed;
     static bool q_pressed = false;
     (void)q_pressed;
+    static bool backspace_pressed = false;
+    (void)backspace_pressed;
 
     switch (keycode) {
         // TODO
-        // 1: `Alt + Backspace` == removes entire line
-        // 2: `Ctrl + Backspace` == remove single word (basically swap with #1)
-        // 3: Use `Ctrl + Tab` instead of `} + LGUI + Right` (the same for left)
-        case SECOND_LYR: // MO(LWIN1/LMAC1/LLIN1)
-            if (record->event.pressed) {
-                if (get_highest_layer(layer_state) == LWIN0) {
-                    layer_on(LWIN1);
-                } else if (get_highest_layer(layer_state) == LMAC0) {
-                    layer_on(LMAC1);
-                } else {
-                    layer_on(LLIN1);
-                }
-            } else {
-                if (get_highest_layer(layer_state) == LWIN1) {
-                    layer_off(LWIN1);
-                } else if (get_highest_layer(layer_state) == LMAC1) {
-                    layer_off(LMAC1);
-                } else {
-                    layer_off(LLIN1);
-                }
-            }
-            return false;
+        // 1: Use `Ctrl + Tab` instead of `} + LGUI + Right` (the same for left)
+
+        // case SECOND_LYR: // MO(LWIN1/LMAC1/LLIN1)
+        //     if (record->event.pressed) {
+        //         if (get_highest_layer(layer_state) == LWIN0) {
+        //             layer_on(LWIN1);
+        //         } else if (get_highest_layer(layer_state) == LMAC0) {
+        //             layer_on(LMAC1);
+        //         } else {
+        //             layer_on(LLIN1);
+        //         }
+        //     } else {
+        //         if (get_highest_layer(layer_state) == LWIN1) {
+        //             layer_off(LWIN1);
+        //         } else if (get_highest_layer(layer_state) == LMAC1) {
+        //             layer_off(LMAC1);
+        //         } else {
+        //             layer_off(LLIN1);
+        //         }
+        //     }
+        //     return false;
 
         case M_BTICK: // `
             if (record->event.pressed) {
@@ -252,6 +254,33 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 q_pressed = false;
             }
             return false;
+
+        case KC_NINE: // Backspace
+            if (record->event.pressed) {
+                backspace_pressed = true;
+                if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
+                    if (left_gui_pressed) {
+                        unregister_code(KC_LGUI);
+                        register_code(KC_LALT);
+                        tap_code(KC_BSPC);
+                        register_code(KC_LGUI);
+                        unregister_code(KC_LALT);
+                    } else if (left_alt_pressed) {
+                        unregister_code(KC_LALT);
+                        register_code(KC_LGUI);
+                        tap_code(KC_BSPC);
+                        register_code(KC_LALT);
+                        unregister_code(KC_LGUI);
+                    } else {
+                        tap_code(KC_BSPC);
+                    }
+                } else {
+                    tap_code(KC_BSPC);
+                }
+            } else {
+                backspace_pressed = false;
+            }
+            return false;
     }
     return true;
 }
@@ -280,14 +309,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [LMAC0] = LAYOUT(
         KC_ESC     , KC_1       , KC_2       , KC_3      , KC_4      , KC_5      ,                         KC_6      , KC_7      , KC_8      , KC_9      , KC_0      , KC_MEDIA_PLAY_PAUSE ,
-        KC_THREE   , KC_EIGHT   , KC_W       , KC_E      , KC_R      , KC_T      ,                         KC_Y      , KC_U      , KC_I      , KC_O      , KC_P      , KC_BSPC   ,
-        SECOND_LYR , KC_A       , KC_S       , KC_D      , KC_F      , KC_G      ,                         KC_H      , KC_J      , KC_K      , KC_L      , KC_SCLN   , SECOND_LYR,
+        KC_THREE   , KC_EIGHT   , KC_W       , KC_E      , KC_R      , KC_T      ,                         KC_Y      , KC_U      , KC_I      , KC_O      , KC_P      , KC_NINE   ,
+        MO(LMAC1)  , KC_A       , KC_S       , KC_D      , KC_F      , KC_G      ,                         KC_H      , KC_J      , KC_K      , KC_L      , KC_SCLN   , MO(LMAC1) ,
         KC_LSFT    , KC_Z       , KC_X       , KC_C      , KC_V      , KC_B      , KC_VOLD   , KC_VOLU   , KC_N      , KC_M      , KC_COMM   , KC_DOT    , KC_SLSH   , KC_LSFT   ,
                                                            KC_SEVEN  , KC_TWO    , KC_SPC    , KC_ENT    , KC_LSFT   , KC_ONE
     ),
     [LMAC1] = LAYOUT(
         KC_MPRV    , KC_F1      , KC_F2      , KC_F3     , KC_F4     , KC_F5     ,                         KC_F6     , KC_F7     , KC_F8     , KC_F9     , KC_F10    , KC_MNXT   ,
-        KC_THREE   , KC_EXLM    , KC_AT      , KC_CIRC   , KC_DLR    , KC_PERC   ,                         KC_PIPE   , KC_LBRC   , KC_RBRC   , KC_QUOT   , KC_PPLS   , KC_BSPC   ,
+        KC_THREE   , KC_EXLM    , KC_AT      , KC_CIRC   , KC_DLR    , KC_PERC   ,                         KC_PIPE   , KC_LBRC   , KC_RBRC   , KC_QUOT   , KC_PPLS   , KC_NINE   ,
         KC_DEL     , KC_TILD    , KC_HASH    , KC_AMPR   , KC_LPRN   , KC_RPRN   ,                         KC_FIVE   , KC_DOWN   , KC_UP     , KC_SIX    , KC_PMNS   , KC_NO     ,
         KC_LSFT    , KC_QUES    , M_BTICK    , KC_ASTR   , KC_UNDS   , KC_F11    , TO(LSPEC0), TO(LSPEC0), KC_F12    , KC_PEQL   , KC_LT     , KC_GT     , KC_NO     , KC_F11    ,
                                                            KC_SEVEN  , KC_TWO    , KC_SPC    , KC_ESC    , KC_LSFT   , KC_ONE
