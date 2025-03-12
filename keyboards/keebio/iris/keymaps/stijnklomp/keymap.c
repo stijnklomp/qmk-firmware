@@ -49,6 +49,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     (void)backspace_pressed;
 
     switch (keycode) {
+        // TODO
+        // 1: Map 'Left Control (KC_TWO) + Tab (KC_THREE)' to "move to different sub-window within Kitty"
+        //    This currently is set to 'Left GUI (KC_SEVEN) + Left Control (KC_TWO)'
+
         // case SECOND_LYR: // MO(LWIN1/LMAC1/LLIN1)
         //     if (record->event.pressed) {
         //         if (get_highest_layer(layer_state) == LWIN0) {
