@@ -2,7 +2,8 @@
 
 enum custom_keycodes {
     // SECOND_LYR = , // MO(LWIN1/LMAC1/LLIN1)
-    M_BTICK = SAFE_RANGE, // `
+    SGL_BTICK = SAFE_RANGE, // "`"
+    SGL_BSLS, // "\"
     KC_ONE, // Left Control (KC_LCTL)
     KC_TWO, // Left Alt (KC_LALT)
     KC_THREE, // Tab (KC_TAB)
@@ -73,9 +74,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         //     }
         //     return false;
 
-        case M_BTICK: // `
+        case SGL_BTICK: // "`"
             if (record->event.pressed) {
                 SEND_STRING("`");
+            }
+            return false;
+
+        case SGL_BSLS: // "\"
+            if (record->event.pressed) {
+                SEND_STRING("\\");
             }
             return false;
 
@@ -303,7 +310,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_MPRV    , KC_F1      , KC_F2      , KC_F3     , KC_F4     , KC_F5     ,                         KC_F6     , KC_F7     , KC_F8     , KC_F9     , KC_F10    , KC_MNXT   ,
         KC_THREE   , KC_EXLM    , KC_AT      , KC_CIRC   , KC_DLR    , KC_PERC   ,                         KC_PIPE   , KC_LBRC   , KC_RBRC   , KC_QUOT   , KC_PPLS   , KC_F12    ,
         KC_DEL     , KC_TILD    , KC_HASH    , KC_AMPR   , KC_LPRN   , KC_RPRN   ,                         KC_FIVE   , KC_DOWN   , KC_UP     , KC_SIX    , KC_PMNS   , KC_F11    ,
-        KC_FOUR    , KC_QUES    , M_BTICK    , KC_ASTR   , KC_UNDS   , KC_F11    , TO(LSPEC0), TO(LSPEC0), KC_F12    , KC_PEQL   , KC_LT     , KC_GT     , KC_NO     , KC_FOUR   ,
+        KC_FOUR    , KC_QUES    , SGL_BTICK  , KC_ASTR   , KC_UNDS   , KC_F11    , TO(LSPEC0), TO(LSPEC0), KC_F12    , KC_PEQL   , KC_LT     , KC_GT     , SGL_BSLS  , KC_FOUR   ,
                                                            KC_ONE    , KC_TWO    , KC_SPC    , KC_ESC    , KC_FOUR   , KC_ONE
     ),
     [LMAC0] = LAYOUT(
@@ -317,7 +324,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_MPRV    , KC_F1      , KC_F2      , KC_F3     , KC_F4     , KC_F5     ,                         KC_F6     , KC_F7     , KC_F8     , KC_F9     , KC_F10    , KC_MNXT   ,
         KC_THREE   , KC_EXLM    , KC_AT      , KC_CIRC   , KC_DLR    , KC_PERC   ,                         KC_PIPE   , KC_LBRC   , KC_RBRC   , KC_QUOT   , KC_PPLS   , KC_NINE   ,
         KC_DEL     , KC_TILD    , KC_HASH    , KC_AMPR   , KC_LPRN   , KC_RPRN   ,                         KC_FIVE   , KC_DOWN   , KC_UP     , KC_SIX    , KC_PMNS   , KC_NO     ,
-        KC_FOUR    , KC_QUES    , M_BTICK    , KC_ASTR   , KC_UNDS   , KC_F11    , TO(LSPEC0), TO(LSPEC0), KC_F12    , KC_PEQL   , KC_LT     , KC_GT     , KC_NO     , KC_F11    ,
+        KC_FOUR    , KC_QUES    , SGL_BTICK  , KC_ASTR   , KC_UNDS   , KC_F11    , TO(LSPEC0), TO(LSPEC0), KC_F12    , KC_PEQL   , KC_LT     , KC_GT     , SGL_BSLS  , KC_F11    ,
                                                            KC_SEVEN  , KC_TWO    , KC_SPC    , KC_ESC    , KC_FOUR   , KC_ONE
     ),
     [LLIN0] = LAYOUT(
@@ -331,7 +338,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_MPRV    , KC_F1      , KC_F2      , KC_F3     , KC_F4     , KC_F5     ,                         KC_F6     , KC_F7     , KC_F8     , KC_F9     , KC_F10    , KC_MNXT   ,
         KC_TAB     , KC_EXLM    , KC_AT      , KC_CIRC   , KC_DLR    , KC_PERC   ,                         KC_PIPE   , KC_LBRC   , KC_RBRC   , KC_QUOT   , KC_PPLS   , KC_BSPC   ,
         KC_DEL     , KC_TILD    , KC_HASH    , KC_AMPR   , KC_LPRN   , KC_RPRN   ,                         KC_LEFT   , KC_DOWN   , KC_UP     , KC_RIGHT  , KC_PMNS   , KC_F11    ,
-        KC_LSFT    , KC_QUES    , M_BTICK    , KC_ASTR   , KC_UNDS   , KC_F11    , TO(LSPEC0), TO(LSPEC0), KC_F12    , KC_PEQL   , KC_LT     , KC_GT     , KC_NO     , KC_LSFT   ,
+        KC_LSFT    , KC_QUES    , SGL_BTICK  , KC_ASTR   , KC_UNDS   , KC_F11    , TO(LSPEC0), TO(LSPEC0), KC_F12    , KC_PEQL   , KC_LT     , KC_GT     , SGL_BSLS  , KC_LSFT   ,
                                                            KC_LALT   , KC_LGUI   , KC_SPC    , KC_ESC    , KC_LSFT   , KC_ONE
     ),
 };
