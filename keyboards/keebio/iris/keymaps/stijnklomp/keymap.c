@@ -54,6 +54,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         // 1: Map 'Left Control (KC_TWO) + Tab (KC_THREE)' to "move to different sub-window within Kitty"
         //    This currently is set to 'Left GUI (KC_SEVEN) + Left Control (KC_TWO)'
         // 2: When holding 'Shift + Left Control (KC_TWO) + Left/Right' (on macOS), it prevents you from continuing to highlight text when you then only hold Shift and press Left/Right
+        // 3.1: Move '(' + ')' to 'y' (2nd layer)
+        // 3.2: Put '] + shift' on 'u' (2nd layer), '{' on 'i' (2nd layer)
 
         // case SECOND_LYR: // MO(LWIN1/LMAC1/LLIN1)
         //     if (record->event.pressed) {
