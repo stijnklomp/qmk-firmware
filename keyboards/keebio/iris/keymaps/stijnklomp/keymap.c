@@ -1,7 +1,7 @@
 #include QMK_KEYBOARD_H
 
+// Custom keys usually start with "CK" (Custom Key)
 enum custom_keycodes {
-    // SECOND_LYR = , // MO(LWIN1/LMAC1/LLIN1)
     SGL_BTICK = SAFE_RANGE, // "`"
     SGL_BSLS, // "\"
     CK_LCTL, // Left Control (KC_LCTL)
@@ -30,6 +30,11 @@ void matrix_init_user(void) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    // The reason for having lots of complex custom key binds is because it:
+    // - allows me to map macOS controls closer to Windows controls
+    // - makes the different operating system layers closer to each other for every app within the OS' GUI
+    static bool macos_move_to_next_or_prev_apps = false;
+    (void)macos_move_to_next_or_prev_apps;
     static bool left_control_pressed = false;
     (void)left_control_pressed;
     static bool left_alt_pressed = false;
@@ -51,31 +56,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
     switch (keycode) {
         // TODO
-        // 1: Map 'Left Control (CK_LALT) + Tab (CK_TAB)' to "move to different sub-window within Kitty"
-        //    This currently is set to 'Left GUI (CK_LGUI) + Left Control (CK_LALT)'
-        // 2: When holding 'Shift + Left Control (CK_LALT) + Left/Right' (on macOS), it prevents you from continuing to highlight text when you then only hold Shift and press Left/Right
-        // 3.1: Move '(' + ')' to 'y' (2nd layer)
-        // 3.2: Put '] + shift' on 'u' (2nd layer), '{' on 'i' (2nd layer)
-
-        // case SECOND_LYR: // MO(LWIN1/LMAC1/LLIN1)
-        //     if (record->event.pressed) {
-        //         if (get_highest_layer(layer_state) == LWIN0) {
-        //             layer_on(LWIN1);
-        //         } else if (get_highest_layer(layer_state) == LMAC0) {
-        //             layer_on(LMAC1);
-        //         } else {
-        //             layer_on(LLIN1);
-        //         }
-        //     } else {
-        //         if (get_highest_layer(layer_state) == LWIN1) {
-        //             layer_off(LWIN1);
-        //         } else if (get_highest_layer(layer_state) == LMAC1) {
-        //             layer_off(LMAC1);
-        //         } else {
-        //             layer_off(LLIN1);
-        //         }
-        //     }
-        //     return false;
+        // 1: Map 'Right Control (KC_RCTL) + Tab (CK_TAB)' to "move to different sub-window within Kitty"
+        // 2.1: Move '(' + ')' to 'y' (2nd layer)
+        // 2.2: Put '] + shift' on 'u' (2nd layer), '{' on 'i' (2nd layer)
 
         case SGL_BTICK: // "`"
             if (record->event.pressed) {
@@ -85,7 +68,27 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
         case SGL_BSLS: // KC_BSLS
             if (record->event.pressed) {
+                // The many if statements are to prevent special keys ("«" and "|") from being typed accidentally when certain keys are held
+                // or to prevent no key at all being from being typed if control is held
+                if (left_control_pressed) {
+                    unregister_code(KC_LCTL);
+                }
+                if (left_alt_pressed) {
+                    unregister_code(KC_LALT);
+                }
+                if (left_gui_pressed) {
+                    unregister_code(KC_LGUI);
+                }
                 tap_code(KC_BSLS);
+                if (left_control_pressed) {
+                    register_code(KC_LCTL);
+                }
+                if (left_alt_pressed) {
+                    register_code(KC_LALT);
+                }
+                if (left_gui_pressed) {
+                    register_code(KC_LGUI);
+                }
             }
             return false;
 
@@ -105,12 +108,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 register_code(KC_LALT);
             } else {
                 left_alt_pressed = false;
-                // This is needed to make "alt + tab" work
-                // without it, the next/previous app won't be selected when you release
                 if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
-                    unregister_code(KC_LGUI);
-                    if (left_shift_pressed) {
-                        unregister_code(KC_LSFT);
+                    if (macos_move_to_next_or_prev_apps) {
+                        // This is needed to make "command" + "tab" work
+                        // without it, the next/previous app won't be selected when you release "command"
+                        macos_move_to_next_or_prev_apps = false;
+                        unregister_code(KC_LGUI);
+                        if (left_shift_pressed) {
+                            unregister_code(KC_LSFT);
+                        }
                     }
                 }
                 unregister_code(KC_LALT);
@@ -122,12 +128,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 left_tab_pressed = true;
                 if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
                     if (left_gui_pressed) {
+                        // Use command + shift + "{" or "}" instead of the default "control" + "tab" behavior as this is not always consistent in all apps
                         if (left_shift_pressed) {
                             tap_code16(S(LGUI(KC_LCBR)));
                         } else {
                             tap_code16(S(LGUI(KC_RCBR)));
                         }
                     } else if (left_alt_pressed) {
+                        // Use "command" + ("shift") + "tab" to move to next/previous app
+                        macos_move_to_next_or_prev_apps = true;
                         unregister_code(KC_LALT);
                         if (left_shift_pressed) {
                             register_code(KC_LSFT);
@@ -163,7 +172,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 left_pressed = true;
                 if (get_highest_layer(layer_state) == LWIN0 || get_highest_layer(layer_state) == LWIN1) {
-                    if (left_alt_pressed) { // Home
+                    if (left_alt_pressed) {
+                        // Beginning of line (home)
                         unregister_code(KC_LALT);
                         tap_code(KC_LALT);
                         tap_code(KC_HOME);
@@ -173,6 +183,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     }
                 } else if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
                     if (left_gui_pressed) {
+                        // Beginning of word or previous word
                         unregister_code(KC_LGUI);
                         if (left_shift_pressed) {
                             tap_code16(S(LALT(KC_LEFT)));
@@ -181,6 +192,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                         }
                         register_code(KC_LGUI);
                     } else if (left_alt_pressed) {
+                        // Beginning of line
                         unregister_code(KC_LALT);
                         if (left_shift_pressed) {
                             tap_code16(S(LGUI(KC_LEFT)));
@@ -206,7 +218,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 right_pressed = true;
                 if (get_highest_layer(layer_state) == LWIN0 || get_highest_layer(layer_state) == LWIN1) {
-                    if (left_alt_pressed) { // End
+                    if (left_alt_pressed) {
+                        // End of line
                         unregister_code(KC_LALT);
                         tap_code(KC_LALT);
                         tap_code(KC_END);
@@ -216,6 +229,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     }
                 } else if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
                     if (left_gui_pressed) {
+                        // End of word or end of next word
                         unregister_code(KC_LGUI);
                         if (left_shift_pressed) {
                             tap_code16(S(LALT(KC_RIGHT)));
@@ -224,6 +238,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                         }
                         register_code(KC_LGUI);
                     } else if (left_alt_pressed) {
+                        // End of line
                         unregister_code(KC_LALT);
                         if (left_shift_pressed) {
                             tap_code16(S(LGUI(KC_RIGHT)));
@@ -260,6 +275,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 q_pressed = true;
                 if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
                     if (!left_gui_pressed) {
+                        // Prevent closing entire app and all windows
                         tap_code(KC_Q);
                     }
                 } else {
@@ -275,12 +291,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 backspace_pressed = true;
                 if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
                     if (left_gui_pressed) {
+                        // Remove single word
                         unregister_code(KC_LGUI);
                         register_code(KC_LALT);
                         tap_code(KC_BSPC);
                         register_code(KC_LGUI);
                         unregister_code(KC_LALT);
                     } else if (left_alt_pressed) {
+                        // Remove everything left of cursor
                         unregister_code(KC_LALT);
                         register_code(KC_LGUI);
                         tap_code(KC_BSPC);
