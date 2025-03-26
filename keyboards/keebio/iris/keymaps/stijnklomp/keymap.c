@@ -4,15 +4,15 @@ enum custom_keycodes {
     // SECOND_LYR = , // MO(LWIN1/LMAC1/LLIN1)
     SGL_BTICK = SAFE_RANGE, // "`"
     SGL_BSLS, // "\"
-    KC_ONE, // Left Control (KC_LCTL)
-    KC_TWO, // Left Alt (KC_LALT)
-    KC_THREE, // Tab (KC_TAB)
-    KC_FOUR, // Left Shift (KC_LSFT)
-    KC_FIVE, // Left (KC_LEFT)
-    KC_SIX, // Right (KC_RIGHT)
-    KC_SEVEN, // Left GUI (KC_LGUI)
-    KC_EIGHT, // q (KC_Q)
-    KC_NINE, // Backspace (KC_BSPC)
+    CK_LCTL, // Left Control (KC_LCTL)
+    CK_LALT, // Left Alt (KC_LALT)
+    CK_TAB, // Tab (KC_TAB)
+    CK_LSFT, // Left Shift (KC_LSFT)
+    CK_LEFT, // Left (KC_LEFT)
+    CK_RIGHT, // Right (KC_RIGHT)
+    CK_LGUI, // Left GUI (KC_LGUI)
+    CK_Q, // q (KC_Q)
+    CK_BSPC, // Backspace (KC_BSPC)
 };
 
 enum os_layers {
@@ -51,9 +51,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
     switch (keycode) {
         // TODO
-        // 1: Map 'Left Control (KC_TWO) + Tab (KC_THREE)' to "move to different sub-window within Kitty"
-        //    This currently is set to 'Left GUI (KC_SEVEN) + Left Control (KC_TWO)'
-        // 2: When holding 'Shift + Left Control (KC_TWO) + Left/Right' (on macOS), it prevents you from continuing to highlight text when you then only hold Shift and press Left/Right
+        // 1: Map 'Left Control (CK_LALT) + Tab (CK_TAB)' to "move to different sub-window within Kitty"
+        //    This currently is set to 'Left GUI (CK_LGUI) + Left Control (CK_LALT)'
+        // 2: When holding 'Shift + Left Control (CK_LALT) + Left/Right' (on macOS), it prevents you from continuing to highlight text when you then only hold Shift and press Left/Right
         // 3.1: Move '(' + ')' to 'y' (2nd layer)
         // 3.2: Put '] + shift' on 'u' (2nd layer), '{' on 'i' (2nd layer)
 
@@ -83,13 +83,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case SGL_BSLS: // "\"
+        case SGL_BSLS: // KC_BSLS
             if (record->event.pressed) {
-                SEND_STRING("\\");
+                tap_code(KC_BSLS);
             }
             return false;
 
-        case KC_ONE: // Left Control
+        case CK_LCTL: // Left Control
             if (record->event.pressed) {
                 left_control_pressed = true;
                 register_code(KC_LCTL);
@@ -99,12 +99,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case KC_TWO: // Left Alt
+        case CK_LALT: // Left Alt
             if (record->event.pressed) {
                 left_alt_pressed = true;
                 register_code(KC_LALT);
             } else {
                 left_alt_pressed = false;
+                // This is needed to make "alt + tab" work
+                // without it, the next/previous app won't be selected when you release
                 if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
                     unregister_code(KC_LGUI);
                     if (left_shift_pressed) {
@@ -115,7 +117,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case KC_THREE: // KC_TAB
+        case CK_TAB: // KC_TAB
             if (record->event.pressed) {
                 left_tab_pressed = true;
                 if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
@@ -147,7 +149,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case KC_FOUR: // Left Shift
+        case CK_LSFT: // Left Shift
             if (record->event.pressed) {
                 left_shift_pressed = true;
                 register_code(KC_LSFT);
@@ -157,7 +159,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case KC_FIVE: // Left
+        case CK_LEFT: // Left
             if (record->event.pressed) {
                 left_pressed = true;
                 if (get_highest_layer(layer_state) == LWIN0 || get_highest_layer(layer_state) == LWIN1) {
@@ -182,6 +184,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                         unregister_code(KC_LALT);
                         if (left_shift_pressed) {
                             tap_code16(S(LGUI(KC_LEFT)));
+                            left_shift_pressed = true;
+                            register_code(KC_LSFT);
                         } else {
                             tap_code16(LGUI(KC_LEFT));
                         }
@@ -198,7 +202,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case KC_SIX: // Right
+        case CK_RIGHT: // Right
             if (record->event.pressed) {
                 right_pressed = true;
                 if (get_highest_layer(layer_state) == LWIN0 || get_highest_layer(layer_state) == LWIN1) {
@@ -223,6 +227,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                         unregister_code(KC_LALT);
                         if (left_shift_pressed) {
                             tap_code16(S(LGUI(KC_RIGHT)));
+                            left_shift_pressed = true;
+                            register_code(KC_LSFT);
                         } else {
                             tap_code16(LGUI(KC_RIGHT));
                         }
@@ -231,7 +237,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                         register_code(KC_RIGHT);
                     }
                 } else {
-                    unregister_code(KC_RIGHT);
+                    register_code(KC_RIGHT);
                 }
             } else {
                 right_pressed = false;
@@ -239,7 +245,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case KC_SEVEN: // Left GUI
+        case CK_LGUI: // Left GUI
             if (record->event.pressed) {
                 left_gui_pressed = true;
                 register_code(KC_LGUI);
@@ -249,7 +255,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case KC_EIGHT: // q
+        case CK_Q: // q
             if (record->event.pressed) {
                 q_pressed = true;
                 if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
@@ -264,7 +270,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case KC_NINE: // Backspace
+        case CK_BSPC: // Backspace
             if (record->event.pressed) {
                 backspace_pressed = true;
                 if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
@@ -304,44 +310,44 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [LWIN0] = LAYOUT(
         KC_ESC     , KC_1       , KC_2       , KC_3      , KC_4      , KC_5      ,                         KC_6      , KC_7      , KC_8      , KC_9      , KC_0      , KC_MEDIA_PLAY_PAUSE ,
-        KC_THREE   , KC_Q       , KC_W       , KC_E      , KC_R      , KC_T      ,                         KC_Y      , KC_U      , KC_I      , KC_O      , KC_P      , KC_BSPC   ,
+        CK_TAB     , KC_Q       , KC_W       , KC_E      , KC_R      , KC_T      ,                         KC_Y      , KC_U      , KC_I      , KC_O      , KC_P      , KC_BSPC   ,
         MO(LWIN1)  , KC_A       , KC_S       , KC_D      , KC_F      , KC_G      ,                         KC_H      , KC_J      , KC_K      , KC_L      , KC_SCLN   , MO(LWIN1) ,
-        KC_FOUR    , KC_Z       , KC_X       , KC_C      , KC_V      , KC_B      , KC_VOLD   , KC_VOLU   , KC_N      , KC_M      , KC_COMM   , KC_DOT    , KC_SLSH   , KC_FOUR   ,
-                                                           KC_ONE    , KC_TWO    , KC_SPC    , KC_ENT    , KC_FOUR   , KC_ONE
+        CK_LSFT    , KC_Z       , KC_X       , KC_C      , KC_V      , KC_B      , KC_VOLD   , KC_VOLU   , KC_N      , KC_M      , KC_COMM   , KC_DOT    , KC_SLSH   , CK_LSFT   ,
+                                                           CK_LCTL   , CK_LALT   , KC_SPC    , KC_ENT    , CK_LSFT   , CK_LCTL
     ),
     [LWIN1] = LAYOUT(
         KC_MPRV    , KC_F1      , KC_F2      , KC_F3     , KC_F4     , KC_F5     ,                         KC_F6     , KC_F7     , KC_F8     , KC_F9     , KC_F10    , KC_MNXT   ,
-        KC_THREE   , KC_EXLM    , KC_AT      , KC_CIRC   , KC_DLR    , KC_PERC   ,                         KC_PIPE   , KC_LBRC   , KC_RBRC   , KC_QUOT   , KC_PPLS   , KC_F12    ,
-        KC_DEL     , KC_TILD    , KC_HASH    , KC_AMPR   , KC_LPRN   , KC_RPRN   ,                         KC_FIVE   , KC_DOWN   , KC_UP     , KC_SIX    , KC_PMNS   , KC_F11    ,
-        KC_FOUR    , KC_QUES    , SGL_BTICK  , KC_ASTR   , KC_UNDS   , KC_F11    , TO(LSPEC0), TO(LSPEC0), KC_F12    , KC_PEQL   , KC_LT     , KC_GT     , SGL_BSLS  , KC_FOUR   ,
-                                                           KC_ONE    , KC_TWO    , KC_SPC    , KC_ESC    , KC_FOUR   , KC_ONE
+        CK_TAB     , KC_EXLM    , KC_AT      , KC_CIRC   , KC_DLR    , KC_PERC   ,                         KC_PIPE   , KC_LBRC   , KC_RBRC   , KC_QUOT   , KC_PPLS   , KC_F12    ,
+        KC_DEL     , KC_TILD    , KC_HASH    , KC_AMPR   , KC_LPRN   , KC_RPRN   ,                         CK_LEFT   , KC_DOWN   , KC_UP     , CK_RIGHT  , KC_PMNS   , KC_F11    ,
+        CK_LSFT    , KC_QUES    , SGL_BTICK  , KC_ASTR   , KC_UNDS   , KC_F11    , TO(LSPEC0), TO(LSPEC0), KC_F12    , KC_PEQL   , KC_LT     , KC_GT     , SGL_BSLS  , CK_LSFT   ,
+                                                           CK_LCTL   , CK_LALT   , KC_SPC    , KC_ESC    , CK_LSFT   , CK_LCTL
     ),
     [LMAC0] = LAYOUT(
         KC_ESC     , KC_1       , KC_2       , KC_3      , KC_4      , KC_5      ,                         KC_6      , KC_7      , KC_8      , KC_9      , KC_0      , KC_MEDIA_PLAY_PAUSE ,
-        KC_THREE   , KC_EIGHT   , KC_W       , KC_E      , KC_R      , KC_T      ,                         KC_Y      , KC_U      , KC_I      , KC_O      , KC_P      , KC_NINE   ,
+        CK_TAB     , CK_Q       , KC_W       , KC_E      , KC_R      , KC_T      ,                         KC_Y      , KC_U      , KC_I      , KC_O      , KC_P      , CK_BSPC   ,
         MO(LMAC1)  , KC_A       , KC_S       , KC_D      , KC_F      , KC_G      ,                         KC_H      , KC_J      , KC_K      , KC_L      , KC_SCLN   , MO(LMAC1) ,
-        KC_FOUR    , KC_Z       , KC_X       , KC_C      , KC_V      , KC_B      , KC_VOLD   , KC_VOLU   , KC_N      , KC_M      , KC_COMM   , KC_DOT    , KC_SLSH   , KC_FOUR   ,
-                                                           KC_SEVEN  , KC_TWO    , KC_SPC    , KC_ENT    , KC_FOUR   , KC_ONE
+        CK_LSFT    , KC_Z       , KC_X       , KC_C      , KC_V      , KC_B      , KC_VOLD   , KC_VOLU   , KC_N      , KC_M      , KC_COMM   , KC_DOT    , KC_SLSH   , CK_LSFT   ,
+                                                           CK_LGUI   , CK_LALT   , KC_SPC    , KC_ENT    , CK_LSFT   , CK_LCTL
     ),
     [LMAC1] = LAYOUT(
         KC_MPRV    , KC_F1      , KC_F2      , KC_F3     , KC_F4     , KC_F5     ,                         KC_F6     , KC_F7     , KC_F8     , KC_F9     , KC_F10    , KC_MNXT   ,
-        KC_THREE   , KC_EXLM    , KC_AT      , KC_CIRC   , KC_DLR    , KC_PERC   ,                         KC_PIPE   , KC_LBRC   , KC_RBRC   , KC_QUOT   , KC_PPLS   , KC_NINE   ,
-        KC_DEL     , KC_TILD    , KC_HASH    , KC_AMPR   , KC_LPRN   , KC_RPRN   ,                         KC_FIVE   , KC_DOWN   , KC_UP     , KC_SIX    , KC_PMNS   , KC_NO     ,
-        KC_FOUR    , KC_QUES    , SGL_BTICK  , KC_ASTR   , KC_UNDS   , KC_F11    , TO(LSPEC0), TO(LSPEC0), KC_F12    , KC_PEQL   , KC_LT     , KC_GT     , SGL_BSLS  , KC_F11    ,
-                                                           KC_SEVEN  , KC_TWO    , KC_SPC    , KC_ESC    , KC_FOUR   , KC_ONE
+        CK_TAB     , KC_EXLM    , KC_AT      , KC_CIRC   , KC_DLR    , KC_PERC   ,                         KC_PIPE   , KC_LBRC   , KC_RBRC   , KC_QUOT   , KC_PPLS   , CK_BSPC   ,
+        KC_DEL     , KC_TILD    , KC_HASH    , KC_AMPR   , KC_LPRN   , KC_RPRN   ,                         CK_LEFT   , KC_DOWN   , KC_UP     , CK_RIGHT  , KC_PMNS   , KC_NO     ,
+        CK_LSFT    , KC_QUES    , SGL_BTICK  , KC_ASTR   , KC_UNDS   , KC_F11    , TO(LSPEC0), TO(LSPEC0), KC_F12    , KC_PEQL   , KC_LT     , KC_GT     , SGL_BSLS  , KC_F11    ,
+                                                           CK_LGUI   , CK_LALT   , KC_SPC    , KC_ESC    , CK_LSFT   , CK_LCTL
     ),
     [LLIN0] = LAYOUT(
         KC_ESC     , KC_1       , KC_2       , KC_3      , KC_4      , KC_5      ,                         KC_6      , KC_7      , KC_8      , KC_9      , KC_0      , KC_MEDIA_PLAY_PAUSE ,
         KC_TAB     , KC_Q       , KC_W       , KC_E      , KC_R      , KC_T      ,                         KC_Y      , KC_U      , KC_I      , KC_O      , KC_P      , KC_BSPC   ,
         MO(LLIN1)  , KC_A       , KC_S       , KC_D      , KC_F      , KC_G      ,                         KC_H      , KC_J      , KC_K      , KC_L      , KC_SCLN   , MO(LLIN1) ,
         KC_LSFT    , KC_Z       , KC_X       , KC_C      , KC_V      , KC_B      , KC_VOLD   , KC_VOLU   , KC_N      , KC_M      , KC_COMM   , KC_DOT    , KC_SLSH   , KC_LSFT   ,
-                                                           KC_LALT   , KC_LGUI   , KC_SPC    , KC_ENT    , KC_LSFT   , KC_ONE
+                                                           KC_LALT   , KC_LGUI   , KC_SPC    , KC_ENT    , KC_LSFT   , CK_LCTL
     ),
     [LLIN1] = LAYOUT(
         KC_MPRV    , KC_F1      , KC_F2      , KC_F3     , KC_F4     , KC_F5     ,                         KC_F6     , KC_F7     , KC_F8     , KC_F9     , KC_F10    , KC_MNXT   ,
         KC_TAB     , KC_EXLM    , KC_AT      , KC_CIRC   , KC_DLR    , KC_PERC   ,                         KC_PIPE   , KC_LBRC   , KC_RBRC   , KC_QUOT   , KC_PPLS   , KC_BSPC   ,
         KC_DEL     , KC_TILD    , KC_HASH    , KC_AMPR   , KC_LPRN   , KC_RPRN   ,                         KC_LEFT   , KC_DOWN   , KC_UP     , KC_RIGHT  , KC_PMNS   , KC_F11    ,
         KC_LSFT    , KC_QUES    , SGL_BTICK  , KC_ASTR   , KC_UNDS   , KC_F11    , TO(LSPEC0), TO(LSPEC0), KC_F12    , KC_PEQL   , KC_LT     , KC_GT     , SGL_BSLS  , KC_LSFT   ,
-                                                           KC_LALT   , KC_LGUI   , KC_SPC    , KC_ESC    , KC_LSFT   , KC_ONE
+                                                           KC_LALT   , KC_LGUI   , KC_SPC    , KC_ESC    , KC_LSFT   , CK_LCTL
     ),
 };
