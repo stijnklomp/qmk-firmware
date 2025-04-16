@@ -5,6 +5,7 @@ enum custom_keycodes {
     SGL_BTICK = SAFE_RANGE, // "`"
     SGL_BSLS, // "\"
     CK_LCTL, // Left Control (KC_LCTL)
+    CK_RCTL, // Right Control (KC_RCTL)
     CK_LALT, // Left Alt (KC_LALT)
     CK_TAB, // Tab (KC_TAB)
     CK_LSFT, // Left Shift (KC_LSFT)
@@ -37,6 +38,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     (void)macos_move_to_next_or_prev_apps;
     static bool left_control_pressed = false;
     (void)left_control_pressed;
+    static bool right_control_pressed = false;
+    (void)right_control_pressed;
     static bool left_alt_pressed = false;
     (void)left_alt_pressed;
     static bool left_tab_pressed = false;
@@ -69,9 +72,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case SGL_BSLS: // KC_BSLS
             if (record->event.pressed) {
                 // The many if statements are to prevent special keys ("«" and "|") from being typed accidentally when certain keys are held
-                // or to prevent no key at all being from being typed if control is held
+                // or to prevent no key at all being from being typed if control is held (which can happen, for example, when you move between words and then type whilst releasing the control key at the same time)
                 if (left_control_pressed) {
                     unregister_code(KC_LCTL);
+                }
+                if (right_control_pressed) {
+                    unregister_code(KC_RCTL);
                 }
                 if (left_alt_pressed) {
                     unregister_code(KC_LALT);
@@ -82,6 +88,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 tap_code(KC_BSLS);
                 if (left_control_pressed) {
                     register_code(KC_LCTL);
+                }
+                if (right_control_pressed) {
+                    register_code(KC_RCTL);
                 }
                 if (left_alt_pressed) {
                     register_code(KC_LALT);
@@ -99,6 +108,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             } else {
                 left_control_pressed = false;
                 unregister_code(KC_LCTL);
+            }
+            return false;
+
+        case CK_RCTL: // Right Control
+            if (record->event.pressed) {
+                right_control_pressed = true;
+                register_code(KC_RCTL);
+            } else {
+                right_control_pressed = false;
+                unregister_code(KC_RCTL);
             }
             return false;
 
@@ -126,14 +145,27 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case CK_TAB: // KC_TAB
             if (record->event.pressed) {
                 left_tab_pressed = true;
+                if (right_control_pressed) {
+                    if (left_shift_pressed) {
+                        // Use "left control" + "[" to move to the previous window
+                        tap_code16(LCTL(KC_LBRC));
+                        return false;
+                    }
+
+                    // Use "left control" + "]" to move to the next window
+                    tap_code16(LCTL(KC_RBRC));
+                    return false;
+                }
+
                 if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
                     if (left_gui_pressed) {
-                        // Use command + shift + "{" or "}" instead of the default "control" + "tab" behavior as this is not always consistent in all apps
+                        // Use "command" + "shift" + "{" or "}" instead of the default "control" + "tab" behavior as this is not always consistent in all apps
                         if (left_shift_pressed) {
                             tap_code16(S(LGUI(KC_LCBR)));
                         } else {
                             tap_code16(S(LGUI(KC_RCBR)));
                         }
+                        return false;
                     } else if (left_alt_pressed) {
                         // Use "command" + ("shift") + "tab" to move to next/previous app
                         macos_move_to_next_or_prev_apps = true;
@@ -147,12 +179,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                             tap_code(KC_TAB);
                         }
                         register_code(KC_LALT);
-                    } else {
-                        tap_code(KC_TAB);
+                        return false;
                     }
-                } else {
-                    tap_code(KC_TAB);
                 }
+                tap_code(KC_TAB);
             } else {
                 left_tab_pressed = false;
             }
@@ -331,41 +361,41 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         CK_TAB     , KC_Q       , KC_W       , KC_E      , KC_R      , KC_T      ,                         KC_Y      , KC_U      , KC_I      , KC_O      , KC_P      , KC_BSPC   ,
         MO(LWIN1)  , KC_A       , KC_S       , KC_D      , KC_F      , KC_G      ,                         KC_H      , KC_J      , KC_K      , KC_L      , KC_SCLN   , MO(LWIN1) ,
         CK_LSFT    , KC_Z       , KC_X       , KC_C      , KC_V      , KC_B      , KC_VOLD   , KC_VOLU   , KC_N      , KC_M      , KC_COMM   , KC_DOT    , KC_SLSH   , CK_LSFT   ,
-                                                           CK_LCTL   , CK_LALT   , KC_SPC    , KC_ENT    , CK_LSFT   , CK_LCTL
+                                                           CK_LCTL   , CK_LALT   , KC_SPC    , KC_ENT    , CK_LSFT   , CK_RCTL
     ),
     [LWIN1] = LAYOUT(
         KC_MPRV    , KC_F1      , KC_F2      , KC_F3     , KC_F4     , KC_F5     ,                         KC_F6     , KC_F7     , KC_F8     , KC_F9     , KC_F10    , KC_MNXT   ,
         CK_TAB     , KC_EXLM    , KC_AT      , KC_CIRC   , KC_DLR    , KC_PERC   ,                         KC_PIPE   , KC_LBRC   , KC_RBRC   , KC_QUOT   , KC_PPLS   , KC_F12    ,
         KC_DEL     , KC_TILD    , KC_HASH    , KC_AMPR   , KC_LPRN   , KC_RPRN   ,                         CK_LEFT   , KC_DOWN   , KC_UP     , CK_RIGHT  , KC_PMNS   , KC_F11    ,
         CK_LSFT    , KC_QUES    , SGL_BTICK  , KC_ASTR   , KC_UNDS   , KC_F11    , TO(LSPEC0), TO(LSPEC0), KC_F12    , KC_PEQL   , KC_LT     , KC_GT     , SGL_BSLS  , CK_LSFT   ,
-                                                           CK_LCTL   , CK_LALT   , KC_SPC    , KC_ESC    , CK_LSFT   , CK_LCTL
+                                                           CK_LCTL   , CK_LALT   , KC_SPC    , KC_ESC    , CK_LSFT   , CK_RCTL
     ),
     [LMAC0] = LAYOUT(
         KC_ESC     , KC_1       , KC_2       , KC_3      , KC_4      , KC_5      ,                         KC_6      , KC_7      , KC_8      , KC_9      , KC_0      , KC_MEDIA_PLAY_PAUSE ,
         CK_TAB     , CK_Q       , KC_W       , KC_E      , KC_R      , KC_T      ,                         KC_Y      , KC_U      , KC_I      , KC_O      , KC_P      , CK_BSPC   ,
         MO(LMAC1)  , KC_A       , KC_S       , KC_D      , KC_F      , KC_G      ,                         KC_H      , KC_J      , KC_K      , KC_L      , KC_SCLN   , MO(LMAC1) ,
         CK_LSFT    , KC_Z       , KC_X       , KC_C      , KC_V      , KC_B      , KC_VOLD   , KC_VOLU   , KC_N      , KC_M      , KC_COMM   , KC_DOT    , KC_SLSH   , CK_LSFT   ,
-                                                           CK_LGUI   , CK_LALT   , KC_SPC    , KC_ENT    , CK_LSFT   , CK_LCTL
+                                                           CK_LGUI   , CK_LALT   , KC_SPC    , KC_ENT    , CK_LSFT   , CK_RCTL
     ),
     [LMAC1] = LAYOUT(
         KC_MPRV    , KC_F1      , KC_F2      , KC_F3     , KC_F4     , KC_F5     ,                         KC_F6     , KC_F7     , KC_F8     , KC_F9     , KC_F10    , KC_MNXT   ,
         CK_TAB     , KC_EXLM    , KC_AT      , KC_CIRC   , KC_DLR    , KC_PERC   ,                         KC_PIPE   , KC_LBRC   , KC_RBRC   , KC_QUOT   , KC_PPLS   , CK_BSPC   ,
         KC_DEL     , KC_TILD    , KC_HASH    , KC_AMPR   , KC_LPRN   , KC_RPRN   ,                         CK_LEFT   , KC_DOWN   , KC_UP     , CK_RIGHT  , KC_PMNS   , KC_NO     ,
         CK_LSFT    , KC_QUES    , SGL_BTICK  , KC_ASTR   , KC_UNDS   , KC_F11    , TO(LSPEC0), TO(LSPEC0), KC_F12    , KC_PEQL   , KC_LT     , KC_GT     , SGL_BSLS  , KC_F11    ,
-                                                           CK_LGUI   , CK_LALT   , KC_SPC    , KC_ESC    , CK_LSFT   , CK_LCTL
+                                                           CK_LGUI   , CK_LALT   , KC_SPC    , KC_ESC    , CK_LSFT   , CK_RCTL
     ),
     [LLIN0] = LAYOUT(
         KC_ESC     , KC_1       , KC_2       , KC_3      , KC_4      , KC_5      ,                         KC_6      , KC_7      , KC_8      , KC_9      , KC_0      , KC_MEDIA_PLAY_PAUSE ,
         KC_TAB     , KC_Q       , KC_W       , KC_E      , KC_R      , KC_T      ,                         KC_Y      , KC_U      , KC_I      , KC_O      , KC_P      , KC_BSPC   ,
         MO(LLIN1)  , KC_A       , KC_S       , KC_D      , KC_F      , KC_G      ,                         KC_H      , KC_J      , KC_K      , KC_L      , KC_SCLN   , MO(LLIN1) ,
         KC_LSFT    , KC_Z       , KC_X       , KC_C      , KC_V      , KC_B      , KC_VOLD   , KC_VOLU   , KC_N      , KC_M      , KC_COMM   , KC_DOT    , KC_SLSH   , KC_LSFT   ,
-                                                           KC_LALT   , KC_LGUI   , KC_SPC    , KC_ENT    , KC_LSFT   , CK_LCTL
+                                                           KC_LALT   , KC_LGUI   , KC_SPC    , KC_ENT    , KC_LSFT   , CK_RCTL
     ),
     [LLIN1] = LAYOUT(
         KC_MPRV    , KC_F1      , KC_F2      , KC_F3     , KC_F4     , KC_F5     ,                         KC_F6     , KC_F7     , KC_F8     , KC_F9     , KC_F10    , KC_MNXT   ,
         KC_TAB     , KC_EXLM    , KC_AT      , KC_CIRC   , KC_DLR    , KC_PERC   ,                         KC_PIPE   , KC_LBRC   , KC_RBRC   , KC_QUOT   , KC_PPLS   , KC_BSPC   ,
         KC_DEL     , KC_TILD    , KC_HASH    , KC_AMPR   , KC_LPRN   , KC_RPRN   ,                         KC_LEFT   , KC_DOWN   , KC_UP     , KC_RIGHT  , KC_PMNS   , KC_F11    ,
         KC_LSFT    , KC_QUES    , SGL_BTICK  , KC_ASTR   , KC_UNDS   , KC_F11    , TO(LSPEC0), TO(LSPEC0), KC_F12    , KC_PEQL   , KC_LT     , KC_GT     , SGL_BSLS  , KC_LSFT   ,
-                                                           KC_LALT   , KC_LGUI   , KC_SPC    , KC_ESC    , KC_LSFT   , CK_LCTL
+                                                           KC_LALT   , KC_LGUI   , KC_SPC    , KC_ESC    , KC_LSFT   , CK_RCTL
     ),
 };
