@@ -5,6 +5,9 @@
 ```sh
 # macOS
 brew install qmk/qmk/qmk
+
+# Linux
+python3 -m pip install --user qmk --break-system-packages
 ```
 
 2. [Run QMK setup](https://docs.qmk.fm/newbs_getting_started#set-up-qmk)

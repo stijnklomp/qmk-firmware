@@ -3,56 +3,47 @@
 set -e
 
 echo "Select an option:"
-echo "1) Run all commands"
-echo "2) Run only the compile command"
-echo "3) Run only the copy-to-keyboard command"
-echo "4) Run only the copy-to-desktop command"
-echo "5) Run only the copy-to-keyboard & copy-to-desktop command"
-read -p "Enter your choice (1-4): " choice
+echo "1) Compile to 'compiledLayouts' & 'Desktop'"
+echo "2) Compile to 'compiledLayouts'"
+echo "3) Copy 'compiledLayouts' to 'Desktop'"
+read -p "Enter your choice (1-3): " choice
 
-function moveToCompiledFilesDirectory {
-    if [ -f "compiledLayouts/keebio_iris_rev8_stijnklomp_old.uf2" ]; then
-        rm "compiledLayouts/keebio_iris_rev8_stijnklomp_old.uf2"
+function compile {
+    rm -rf .build/*
+    if [ -f "compiledLayouts/keebio_iris_rev8_stijnklomp.uf2" ]; then
+        rm "compiledLayouts/keebio_iris_rev8_stijnklomp.uf2"
     fi
+    qmk compile -kb keebio/iris/rev8 -km stijnklomp -e CONVERT_TO_UF2=yes
+}
 
-    if [ -f "compiledLayouts/keebio_iris_rev8_stijnklomp_new.uf2" ]; then
-        mv "compiledLayouts/keebio_iris_rev8_stijnklomp_new.uf2" "compiledLayouts/keebio_iris_rev8_stijnklomp_old.uf2"
-    fi
+function moveToCompiledLayoutsDirectory {
+    mkdir "compiledLayouts"
+    cp ".build/keebio_iris_rev8_stijnklomp.uf2" "compiledLayouts/keebio_iris_rev8_stijnklomp.uf2"
+}
 
-    cp ".build/keebio_iris_rev8_stijnklomp.uf2" "compiledLayouts/keebio_iris_rev8_stijnklomp_new.uf2"
+function moveToDesktop {
+    cp "compiledLayouts/keebio_iris_rev8_stijnklomp.uf2" ~/Desktop/
 }
 
 
 case $choice in
   1)
-    echo "Copying compiled file to compiledLayouts/ & Desktop..."
-    echo "Running all commands..."
-    rm -rf .build/*
-    qmk compile -kb keebio/iris/rev8 -km stijnklomp -e CONVERT_TO_UF2=yes
-
-    moveToCompiledFilesDirectory
-    cp ".build/keebio_iris_rev8_stijnklomp.uf2" ~/Desktop/
+    echo "Copying compiled file to compiledLayouts/ & Desktop/..."
+    compile
+    moveToCompiledLayoutsDirectory
+    moveToDesktop
     ;;
   2)
-    echo "Running compile command..."
-    rm -rf .build/*
-    qmk compile -kb keebio/iris/rev8 -km stijnklomp -e CONVERT_TO_UF2=yes
+    echo "Copying compiled file to compiledLayouts/..."
+    compile
+    moveToCompiledLayoutsDirectory
     ;;
   3)
-    echo "Copying compiled file to keyboards/keebio/iris..."
-    moveToCompiledFilesDirectory
-    ;;
-  4)
-    echo "Copying compiled file to Desktop..."
-    cp .build/keebio_iris_rev8_stijnklomp.uf2 ~/Desktop/
-    ;;
-  5)
-    echo "Copying compiled file to compiledLayouts/ & Desktop..."
-    moveToCompiledFilesDirectory
-    cp .build/keebio_iris_rev8_stijnklomp.uf2 ~/Desktop/
+    echo "Copying existing compiled file to Desktop/..."
+    moveToDesktop
     ;;
   *)
-    echo "Invalid choice. Please select a valid option (1-4)."
+    echo "Invalid choice. Please select a valid option (1-3)."
     ;;
 esac
 
