@@ -17,7 +17,7 @@ function compile {
 }
 
 function moveToCompiledLayoutsDirectory {
-    mkdir "compiledLayouts"
+    mkdir -p "compiledLayouts"
     cp ".build/keebio_iris_rev8_stijnklomp.uf2" "compiledLayouts/keebio_iris_rev8_stijnklomp.uf2"
 }
 

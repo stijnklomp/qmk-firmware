@@ -1,4 +1,5 @@
 #include QMK_KEYBOARD_H
+#include <stdbool.h>
 
 // Custom keys usually start with "CK" (Custom Key)
 enum custom_keycodes {
@@ -27,15 +28,31 @@ enum os_layers {
 };
 
 void matrix_init_user(void) {
+    // Default layer
     set_single_persistent_default_layer(LSPEC0);
+}
+
+bool is_windows_layer(uint32_t layer_state) {
+    uint8_t highest_layer = get_highest_layer(layer_state);
+    return (highest_layer == LWIN0 || highest_layer == LWIN1);
+}
+
+bool is_macos_layer(uint32_t layer_state) {
+    uint8_t highest_layer = get_highest_layer(layer_state);
+    return (highest_layer == LMAC0 || highest_layer == LMAC1);
+}
+
+bool is_linux_layer(uint32_t layer_state) {
+    uint8_t highest_layer = get_highest_layer(layer_state);
+    return (highest_layer == LLIN0 || highest_layer == LLIN1);
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // The reason for having lots of complex custom key binds is because it:
     // - allows me to map macOS controls closer to Windows controls
     // - makes the different operating system layers closer to each other for every app within the OS' GUI
-    static bool macos_move_to_next_or_prev_apps = false;
-    (void)macos_move_to_next_or_prev_apps;
+    static bool move_to_next_or_prev_apps = false;
+    (void)move_to_next_or_prev_apps;
     static bool left_control_pressed = false;
     (void)left_control_pressed;
     static bool right_control_pressed = false;
@@ -127,17 +144,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 register_code(KC_LALT);
             } else {
                 left_alt_pressed = false;
-                if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
-                    if (macos_move_to_next_or_prev_apps) {
+                if (is_macos_layer(layer_state) || is_linux_layer(layer_state)) {
+                    if (move_to_next_or_prev_apps) {
                         // This is needed to make "command" + "tab" work
                         // without it, the next/previous app won't be selected when you release "command"
-                        macos_move_to_next_or_prev_apps = false;
+                        move_to_next_or_prev_apps = false;
                         unregister_code(KC_LGUI);
                         if (left_shift_pressed) {
                             unregister_code(KC_LSFT);
                         }
                     }
                 }
+
                 unregister_code(KC_LALT);
             }
             return false;
@@ -157,7 +175,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     return false;
                 }
 
-                if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
+                if (is_macos_layer(layer_state) || is_linux_layer(layer_state)) {
                     if (left_gui_pressed) {
                         // Use "command" + "shift" + "{" or "}" instead of the default "control" + "tab" behavior as this is not always consistent in all apps
                         if (left_shift_pressed) {
@@ -166,9 +184,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                             tap_code16(S(LGUI(KC_RCBR)));
                         }
                         return false;
-                    } else if (left_alt_pressed) {
+                    }
+
+                    if (left_alt_pressed) {
                         // Use "command" + ("shift") + "tab" to move to next/previous app
-                        macos_move_to_next_or_prev_apps = true;
+                        move_to_next_or_prev_apps = true;
                         unregister_code(KC_LALT);
                         if (left_shift_pressed) {
                             register_code(KC_LSFT);
@@ -182,6 +202,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                         return false;
                     }
                 }
+
                 tap_code(KC_TAB);
             } else {
                 left_tab_pressed = false;
@@ -201,17 +222,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case CK_LEFT: // Left
             if (record->event.pressed) {
                 left_pressed = true;
-                if (get_highest_layer(layer_state) == LWIN0 || get_highest_layer(layer_state) == LWIN1) {
+                if (is_windows_layer(layer_state) || is_linux_layer(layer_state)) {
                     if (left_alt_pressed) {
                         // Beginning of line (home)
                         unregister_code(KC_LALT);
                         tap_code(KC_LALT);
                         tap_code(KC_HOME);
                         register_code(KC_LALT);
-                    } else {
-                        register_code(KC_LEFT);
+                        return false;
                     }
-                } else if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
+                }
+
+                if (is_macos_layer(layer_state)) {
                     if (left_gui_pressed) {
                         // Beginning of word or previous word
                         unregister_code(KC_LGUI);
@@ -221,7 +243,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                             tap_code16(LALT(KC_LEFT));
                         }
                         register_code(KC_LGUI);
-                    } else if (left_alt_pressed) {
+                        return false;
+                    }
+
+                    if (left_alt_pressed) {
                         // Beginning of line
                         unregister_code(KC_LALT);
                         if (left_shift_pressed) {
@@ -232,12 +257,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                             tap_code16(LGUI(KC_LEFT));
                         }
                         register_code(KC_LALT);
-                    } else {
-                        register_code(KC_LEFT);
+                        return false;
                     }
-                } else {
-                    register_code(KC_LEFT);
                 }
+
+                register_code(KC_LEFT);
             } else {
                 left_pressed = false;
                 unregister_code(KC_LEFT);
@@ -247,17 +271,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case CK_RIGHT: // Right
             if (record->event.pressed) {
                 right_pressed = true;
-                if (get_highest_layer(layer_state) == LWIN0 || get_highest_layer(layer_state) == LWIN1) {
+                if (is_windows_layer(layer_state) || is_linux_layer(layer_state)) {
                     if (left_alt_pressed) {
                         // End of line
                         unregister_code(KC_LALT);
                         tap_code(KC_LALT);
                         tap_code(KC_END);
                         register_code(KC_LALT);
-                    } else {
-                        register_code(KC_RIGHT);
+                        return false;
                     }
-                } else if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
+                }
+
+                if (is_macos_layer(layer_state)) {
                     if (left_gui_pressed) {
                         // End of word or end of next word
                         unregister_code(KC_LGUI);
@@ -267,7 +292,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                             tap_code16(LALT(KC_RIGHT));
                         }
                         register_code(KC_LGUI);
-                    } else if (left_alt_pressed) {
+                        return false;
+                    }
+
+                    if (left_alt_pressed) {
                         // End of line
                         unregister_code(KC_LALT);
                         if (left_shift_pressed) {
@@ -278,12 +306,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                             tap_code16(LGUI(KC_RIGHT));
                         }
                         register_code(KC_LALT);
-                    } else {
-                        register_code(KC_RIGHT);
+                        return false;
                     }
-                } else {
-                    register_code(KC_RIGHT);
                 }
+
+                register_code(KC_RIGHT);
             } else {
                 right_pressed = false;
                 unregister_code(KC_RIGHT);
@@ -303,14 +330,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case CK_Q: // q
             if (record->event.pressed) {
                 q_pressed = true;
-                if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
-                    if (!left_gui_pressed) {
-                        // Prevent closing entire app and all windows
-                        tap_code(KC_Q);
+                if (is_macos_layer(layer_state)) {
+                    if (left_gui_pressed) {
+                        // Prevent closing of entire app and all its windows
+                        return false;
                     }
-                } else {
-                    tap_code(KC_Q);
                 }
+
+                tap_code(KC_Q);
             } else {
                 q_pressed = false;
             }
@@ -319,7 +346,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case CK_BSPC: // Backspace
             if (record->event.pressed) {
                 backspace_pressed = true;
-                if (get_highest_layer(layer_state) == LMAC0 || get_highest_layer(layer_state) == LMAC1) {
+                if (is_macos_layer(layer_state)) {
                     if (left_gui_pressed) {
                         // Remove single word
                         unregister_code(KC_LGUI);
@@ -327,19 +354,21 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                         tap_code(KC_BSPC);
                         register_code(KC_LGUI);
                         unregister_code(KC_LALT);
-                    } else if (left_alt_pressed) {
+                        return false;
+                    }
+
+                    if (left_alt_pressed) {
                         // Remove everything left of cursor
                         unregister_code(KC_LALT);
                         register_code(KC_LGUI);
                         tap_code(KC_BSPC);
                         register_code(KC_LALT);
                         unregister_code(KC_LGUI);
-                    } else {
-                        tap_code(KC_BSPC);
+                        return false;
                     }
-                } else {
-                    tap_code(KC_BSPC);
                 }
+
+                tap_code(KC_BSPC);
             } else {
                 backspace_pressed = false;
             }
@@ -386,16 +415,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [LLIN0] = LAYOUT(
         KC_ESC     , KC_1       , KC_2       , KC_3      , KC_4      , KC_5      ,                         KC_6      , KC_7      , KC_8      , KC_9      , KC_0      , KC_MEDIA_PLAY_PAUSE ,
-        KC_TAB     , KC_Q       , KC_W       , KC_E      , KC_R      , KC_T      ,                         KC_Y      , KC_U      , KC_I      , KC_O      , KC_P      , KC_BSPC   ,
+        CK_TAB     , KC_Q       , KC_W       , KC_E      , KC_R      , KC_T      ,                         KC_Y      , KC_U      , KC_I      , KC_O      , KC_P      , CK_BSPC   ,
         MO(LLIN1)  , KC_A       , KC_S       , KC_D      , KC_F      , KC_G      ,                         KC_H      , KC_J      , KC_K      , KC_L      , KC_SCLN   , MO(LLIN1) ,
-        KC_LSFT    , KC_Z       , KC_X       , KC_C      , KC_V      , KC_B      , KC_VOLD   , KC_VOLU   , KC_N      , KC_M      , KC_COMM   , KC_DOT    , KC_SLSH   , KC_LSFT   ,
-                                                           KC_LALT   , KC_LGUI   , KC_SPC    , KC_ENT    , KC_LSFT   , CK_RCTL
+        CK_LSFT    , KC_Z       , KC_X       , KC_C      , KC_V      , KC_B      , KC_VOLD   , KC_VOLU   , KC_N      , KC_M      , KC_COMM   , KC_DOT    , KC_SLSH   , CK_LSFT   ,
+                                                           CK_LCTL   , CK_LALT   , KC_SPC    , KC_ENT    , CK_LSFT   , CK_RCTL
     ),
     [LLIN1] = LAYOUT(
         KC_MPRV    , KC_F1      , KC_F2      , KC_F3     , KC_F4     , KC_F5     ,                         KC_F6     , KC_F7     , KC_F8     , KC_F9     , KC_F10    , KC_MNXT   ,
-        KC_TAB     , KC_EXLM    , KC_AT      , KC_CIRC   , KC_DLR    , KC_PERC   ,                         KC_PIPE   , KC_LBRC   , KC_RBRC   , KC_QUOT   , KC_PPLS   , KC_BSPC   ,
-        KC_DEL     , KC_TILD    , KC_HASH    , KC_AMPR   , KC_LPRN   , KC_RPRN   ,                         KC_LEFT   , KC_DOWN   , KC_UP     , KC_RIGHT  , KC_PMNS   , KC_F11    ,
-        KC_LSFT    , KC_QUES    , SGL_BTICK  , KC_ASTR   , KC_UNDS   , KC_F11    , TO(LSPEC0), TO(LSPEC0), KC_F12    , KC_PEQL   , KC_LT     , KC_GT     , SGL_BSLS  , KC_LSFT   ,
-                                                           KC_LALT   , KC_LGUI   , KC_SPC    , KC_ESC    , KC_LSFT   , CK_RCTL
+        CK_TAB     , KC_EXLM    , KC_AT      , KC_CIRC   , KC_DLR    , KC_PERC   ,                         KC_PIPE   , KC_LBRC   , KC_RBRC   , KC_QUOT   , KC_PPLS   , CK_BSPC   ,
+        KC_DEL     , KC_TILD    , KC_HASH    , KC_AMPR   , KC_LPRN   , KC_RPRN   ,                         CK_LEFT   , KC_DOWN   , KC_UP     , CK_RIGHT  , KC_PMNS   , KC_F11    ,
+        CK_LSFT    , KC_QUES    , SGL_BTICK  , KC_ASTR   , KC_UNDS   , KC_F11    , TO(LSPEC0), TO(LSPEC0), KC_F12    , KC_PEQL   , KC_LT     , KC_GT     , SGL_BSLS  , KC_F11   ,
+                                                           CK_LCTL   , CK_LALT   , KC_SPC    , KC_ESC    , CK_LSFT   , CK_RCTL
     ),
 };
