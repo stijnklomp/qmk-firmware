@@ -13,7 +13,6 @@ enum custom_keycodes {
     CK_LEFT, // Left (KC_LEFT)
     CK_RIGHT, // Right (KC_RIGHT)
     CK_LGUI, // Left GUI (KC_LGUI)
-    CK_Q, // q (KC_Q)
     CK_C, // c (KC_C)
     CK_BSPC, // Backspace (KC_BSPC)
 };
@@ -79,10 +78,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
     switch (keycode) {
         // TODO
-        // 1: Map 'Right Control (CK_RCTL) + Left Alt (CK_LALT)' to "Search" in macOS and "Super" in Linux & Windows
-        // 2.1: Move '(' + ')' to 'y' (2nd layer)
-        // 2.2: Put '] + shift' on 'u' (2nd layer), '{' on 'i' (2nd layer)
-        // 3: Fix 'Alt + Right' issue in VSCode in Linux
+        // 1.1: Move '(' + ')' to 'y' (2nd layer)
+        // 1.2: Put '] + shift' on 'u' (2nd layer), '{' on 'i' (2nd layer)
 
         case SGL_BTICK: // "`"
             if (record->event.pressed) {
@@ -134,6 +131,25 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
         case CK_RCTL: // Right Control
             if (record->event.pressed) {
+                if (left_alt_pressed && left_shift_pressed) {
+                    // Open search
+                    left_alt_pressed = false;
+                    left_shift_pressed = false;
+                    right_control_pressed = false;
+                    unregister_code(KC_LSFT);
+                    unregister_code(KC_LALT);
+                    if (is_macos_layer(layer_state)) {
+                        register_code(KC_SPC);
+                        tap_code16(KC_LGUI);
+                        unregister_code(KC_SPC);
+
+                        return false;
+                    }
+
+                    tap_code16(KC_LGUI);
+                    return false;
+                }
+
                 right_control_pressed = true;
                 register_code(KC_RCTL);
             } else {
@@ -144,6 +160,25 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
         case CK_LALT: // Left Alt
             if (record->event.pressed) {
+                if (right_control_pressed && left_shift_pressed) {
+                    // Open search
+                    left_alt_pressed = false;
+                    left_shift_pressed = false;
+                    right_control_pressed = false;
+                    unregister_code(KC_LSFT);
+                    unregister_code(KC_RCTL);
+                    if (is_macos_layer(layer_state)) {
+                        register_code(KC_SPC);
+                        tap_code16(KC_LGUI);
+                        unregister_code(KC_SPC);
+
+                        return false;
+                    }
+
+                    tap_code16(KC_LGUI);
+                    return false;
+                }
+
                 left_alt_pressed = true;
                 register_code(KC_LALT);
             } else {
@@ -329,22 +364,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
-        case CK_Q: // q
-            if (record->event.pressed) {
-                q_pressed = true;
-                if (is_macos_layer(layer_state)) {
-                    if (left_gui_pressed) {
-                        // Prevent closing of entire app and all its windows
-                        return false;
-                    }
-                }
-
-                tap_code(KC_Q);
-            } else {
-                q_pressed = false;
-            }
-            return false;
-
         case CK_C: // c
             if (record->event.pressed) {
                 c_pressed = true;
@@ -420,7 +439,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [LMAC0] = LAYOUT(
         KC_ESC     , KC_1       , KC_2       , KC_3      , KC_4      , KC_5      ,                         KC_6      , KC_7      , KC_8      , KC_9      , KC_0      , KC_MEDIA_PLAY_PAUSE ,
-        CK_TAB     , CK_Q       , KC_W       , KC_E      , KC_R      , KC_T      ,                         KC_Y      , KC_U      , KC_I      , KC_O      , KC_P      , CK_BSPC   ,
+        CK_TAB     , KC_Q       , KC_W       , KC_E      , KC_R      , KC_T      ,                         KC_Y      , KC_U      , KC_I      , KC_O      , KC_P      , CK_BSPC   ,
         MO(LMAC1)  , KC_A       , KC_S       , KC_D      , KC_F      , KC_G      ,                         KC_H      , KC_J      , KC_K      , KC_L      , KC_SCLN   , MO(LMAC1) ,
         CK_LSFT    , KC_Z       , KC_X       , KC_C      , KC_V      , KC_B      , KC_VOLD   , KC_VOLU   , KC_N      , KC_M      , KC_COMM   , KC_DOT    , KC_SLSH   , CK_LSFT   ,
                                                            CK_LGUI   , CK_LALT   , KC_SPC    , KC_ENT    , CK_LSFT   , CK_RCTL
