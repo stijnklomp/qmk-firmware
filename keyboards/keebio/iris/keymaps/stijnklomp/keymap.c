@@ -79,9 +79,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
     switch (keycode) {
         // TODO
-        // 1: Map 'Right Control (KC_RCTL) + Tab (CK_TAB)' to "move to different sub-window within Kitty"
+        // 1: Map 'Right Control (CK_RCTL) + Left Alt (CK_LALT)' to "Search" in macOS and "Super" in Linux & Windows
         // 2.1: Move '(' + ')' to 'y' (2nd layer)
         // 2.2: Put '] + shift' on 'u' (2nd layer), '{' on 'i' (2nd layer)
+        // 3: Fix 'Alt + Right' issue in VSCode in Linux
 
         case SGL_BTICK: // "`"
             if (record->event.pressed) {
@@ -229,7 +230,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     if (left_alt_pressed) {
                         // Beginning of line (home)
                         unregister_code(KC_LALT);
-                        tap_code(KC_LALT);
                         tap_code(KC_HOME);
                         register_code(KC_LALT);
                         return false;
@@ -278,7 +278,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     if (left_alt_pressed) {
                         // End of line
                         unregister_code(KC_LALT);
-                        tap_code(KC_LALT);
                         tap_code(KC_END);
                         register_code(KC_LALT);
                         return false;
